@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: . # Assumes Dockerfile is in the same directory
+    container_name: golang_crud_app
+    ports:
+      - "${APP_PORT}:8080" # Use environment variable for app port
+    env_file: 
+      - .env # Load variables from .env file
+    depends_on:
+      - postgres # Ensures Postgres is started before the app
+
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    ports:
+      - "${DATABASE_PORT}:5432" # Use environment variable for Postgres port
+    env_file: 
+      - .env # Load variables from .env file
+    environment:
+      POSTGRES_USER: ${DATABASE_USER} # Use .env variables
+      POSTGRES_PASSWORD: ${DATABASE_PASS}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
