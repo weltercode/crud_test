@@ -20,7 +20,6 @@ func main() {
 		fmt.Printf("%+v\n", err)
 		return
 	}
-	fmt.Println(cfg)
 	application := app.CreateApp(&cfg)
 	application.Run()
 }

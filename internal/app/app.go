@@ -1,8 +1,8 @@
 package app
 
 import (
+	"crud_test/internal/database/postgres"
 	"crud_test/internal/transport/rest"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -26,22 +26,39 @@ func CreateApp(config *Config) *App {
 	return &App{config: config}
 }
 func (app *App) Run() {
-	fmt.Println("Running")
+	log.Println("App Running")
 
-	r := mux.NewRouter()
-	r.HandleFunc("/", rest.HomeHandler)
-	r.HandleFunc("/products", rest.ProductsHandler)
-	r.HandleFunc("/articles", rest.ArticlesHandler)
-	http.Handle("/", r)
+	router := mux.NewRouter()
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		rest.HomeHandler(w, r, router) // Pass the router itself
+	})
+	router.HandleFunc("/tasks", rest.TasksListHandler).Methods("GET").Name("tasks_list")
+	router.HandleFunc("/task/{id:[0-9]+}", rest.TaskViewHandler).Methods("GET").Name("task_view")
+	router.HandleFunc("/task/new", rest.TaskViewHandler).Methods("GET").Name("task_new")
+	router.HandleFunc("/task/add", rest.TaskViewHandler).Methods("GET").Name("task_add")
+	http.Handle("/", router)
 
 	srv := &http.Server{
 		Addr:    ":" + app.config.AppPort,
-		Handler: r,
+		Handler: router,
 	}
 
 	log.Println("SERVER STARTED AT", time.Now().Format(time.RFC3339))
 
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
+	}
+
+	db := postgres.NewDbConnect(postgres.ConnectionConfig{
+		Host:   app.config.DbIp,
+		Port:   app.config.DbPort,
+		DbName: app.config.DbName,
+		User:   app.config.DbUser,
+		Pass:   app.config.DbPass,
+	})
+	if err := db.Ping(); err != nil {
+		log.Fatal(err)
+	} else {
+		log.Println("Database connected")
 	}
 }
