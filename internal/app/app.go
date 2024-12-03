@@ -11,7 +11,9 @@ import (
 )
 
 type App struct {
-	config *Config
+	config  *Config
+	router  *mux.Router
+	handler *rest.Handler
 }
 type Config struct {
 	DbIp    string `env:"DATABASE_IP"`
@@ -23,24 +25,27 @@ type Config struct {
 }
 
 func CreateApp(config *Config) *App {
-	return &App{config: config}
+	router := mux.NewRouter()
+	return &App{
+		config:  config,
+		router:  router,
+		handler: rest.NewHandler(router),
+	}
 }
 func (app *App) Run() {
 	log.Println("App Running")
 
-	router := mux.NewRouter()
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		rest.HomeHandler(w, r, router) // Pass the router itself
-	})
-	router.HandleFunc("/tasks", rest.TasksListHandler).Methods("GET").Name("tasks_list")
-	router.HandleFunc("/task/{id:[0-9]+}", rest.TaskViewHandler).Methods("GET").Name("task_view")
-	router.HandleFunc("/task/new", rest.TaskViewHandler).Methods("GET").Name("task_new")
-	router.HandleFunc("/task/add", rest.TaskViewHandler).Methods("GET").Name("task_add")
-	http.Handle("/", router)
+	app.router.HandleFunc("/", app.handler.HomeHandler)
+	app.router.HandleFunc("/tasks", app.handler.TasksListHandler).Methods("GET").Name("tasks_list")
+	app.router.HandleFunc("/task/{id:[0-9]+}", app.handler.TaskViewHandler).Methods("GET").Name("task_view")
+	app.router.HandleFunc("/task/new", app.handler.TaskViewHandler).Methods("GET").Name("task_new")
+	app.router.HandleFunc("/task/add", app.handler.TaskViewHandler).Methods("GET").Name("task_add")
+	app.router.HandleFunc("/task/add", app.handler.TaskViewHandler)
+	http.Handle("/", app.router)
 
 	srv := &http.Server{
 		Addr:    ":" + app.config.AppPort,
-		Handler: router,
+		Handler: app.router,
 	}
 
 	log.Println("SERVER STARTED AT", time.Now().Format(time.RFC3339))

@@ -1,6 +1,7 @@
+{{ define "task/edit.html" }}
 <h1>Editing {{.Title}}</h1>
 
-<form action="/save/{{.Id}}" method="POST">
+<form action="/task/add/{{.Id}}" method="POST">
 <div><textarea name="body" rows="20" cols="80">{{printf "%s" .Body}}</textarea></div>
 <div><input type="submit" value="Save"></div>
 </form>
