@@ -1,5 +1,7 @@
+{{ define "content" }}
     <h1>{{ .Title }}</h1>
     <p class="lead">{{ .Description }}</p>
     <p class="lead">
-    <a href="{{ .newTaskHref }}" class="btn btn-lg btn-secondary fw-bold border-white">Start new Task</a>
-</p>
+        <a href="{{ .newTaskHref }}" class="btn btn-lg btn-secondary fw-bold border-white">Start new Task</a>
+    </p>
+{{ end }}

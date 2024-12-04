@@ -76,11 +76,17 @@ func (h *Handler) TaskViewHandler(w http.ResponseWriter, r *http.Request) {
 		"TaskID":  taskID,
 		"Message": "Here are the details of your task.",
 	}
-	err := h.tmpl.ExecuteTemplate(w, "edit.html", data)
+	var err error
+
+	err = h.tmpl.ExecuteTemplate(w, "edit.html", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	//h.BaseHandler(w, r, "task/edit.html", data)
+
+	err = h.tmpl.ExecuteTemplate(w, "base.html", data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // Helper function to get URLs for routes
