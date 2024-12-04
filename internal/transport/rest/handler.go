@@ -24,21 +24,23 @@ func NewHandler(router *mux.Router) *Handler {
 }
 
 // BaseHandler renders the base layout and dynamically includes specific content
-func (h *Handler) BaseHandler(w http.ResponseWriter, r *http.Request, content string, data map[string]interface{}) {
-	w.WriteHeader(http.StatusOK)
+// func (h *Handler) BaseHandler(w http.ResponseWriter, r *http.Request) {
+// 	w.WriteHeader(http.StatusOK)
 
-	// Dynamically include content template name
-	data["Content"] = content
+// 	// Dynamically include content template name
+// 	data["Content"] = content
 
-	// Render the base layout (e.g., index.html)
-	err := h.tmpl.ExecuteTemplate(w, "base.html", data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
+// 	// Render the base layout (e.g., index.html)
+
+// 	err := h.tmpl.ExecuteTemplate(w, "base.html", data)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 	}
+// }
 
 // HomeHandler handles the "/" route and injects specific content
 func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
+
 	data := map[string]interface{}{
 		"Title":       "Welcome to simple task tracker",
 		"Description": "Manage your tasks efficiently",
@@ -48,7 +50,7 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	h.BaseHandler(w, r, "home.html", data)
+	//h.BaseHandler(w, r, "home.html", data)
 }
 
 // TasksListHandler handles the "/tasks" route
@@ -57,7 +59,11 @@ func (h *Handler) TasksListHandler(w http.ResponseWriter, r *http.Request) {
 		"Title": "Tasks List",
 		"Tasks": []string{"Task 1", "Task 2", "Task 3"},
 	}
-	h.BaseHandler(w, r, "tasks_list.html", data)
+	err := h.tmpl.ExecuteTemplate(w, "tasks_list.html", data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	//h.BaseHandler(w, r, "tasks_list.html", data)
 }
 
 // TaskViewHandler handles the "/task/{id}" route
@@ -70,7 +76,11 @@ func (h *Handler) TaskViewHandler(w http.ResponseWriter, r *http.Request) {
 		"TaskID":  taskID,
 		"Message": "Here are the details of your task.",
 	}
-	h.BaseHandler(w, r, "task/edit.html", data)
+	err := h.tmpl.ExecuteTemplate(w, "edit.html", data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	//h.BaseHandler(w, r, "task/edit.html", data)
 }
 
 // Helper function to get URLs for routes
