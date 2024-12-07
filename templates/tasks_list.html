@@ -1,1 +1,14 @@
-tasks_list ---
+{{ define "content" }}
+<h1>{{ .Title }}</h1>
+<ul class="list-group">
+    {{ range .Tasks }}
+    <li class="list-group-item">    
+        <strong> {{ .Title }}</strong> ({{ .Description }}) {{ formatTime .TimeStarted }} - {{ formatTime .TimeEnded }}<br>
+        {{ range .Tags }}
+            {{ .Name }}
+        {{ end }}
+        <a href="task/{{ .ID }}" class="btn btn-secondary fw-bold border-white">edit</a>
+    </li>
+    {{ end }}
+</ul>
+{{ end }}

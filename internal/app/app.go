@@ -35,12 +35,14 @@ func CreateApp(config *Config) *App {
 func (app *App) Run() {
 	log.Println("App Running")
 
-	app.router.HandleFunc("/", app.handler.HomeHandler)
+	app.router.HandleFunc("/", app.handler.HomeHandler).Name("home")
 	app.router.HandleFunc("/tasks", app.handler.TasksListHandler).Methods("GET").Name("tasks_list")
 	app.router.HandleFunc("/task/{id:[0-9]+}", app.handler.TaskViewHandler).Methods("GET").Name("task_view")
+	app.router.HandleFunc("/task/", app.handler.TaskViewHandlerzz).Methods("GET").Name("task_view_zz")
+	app.router.HandleFunc("/task/new", app.handler.TaskViewHandler).Methods("GET").Name("task_new")
 	app.router.HandleFunc("/task/new", app.handler.TaskViewHandler).Methods("GET").Name("task_new")
 	app.router.HandleFunc("/task/add", app.handler.TaskViewHandler).Methods("GET").Name("task_add")
-	app.router.HandleFunc("/task/add", app.handler.TaskViewHandler)
+	app.router.HandleFunc("/task/login", app.handler.LoginHandler).Methods("GET").Name("login")
 	http.Handle("/", app.router)
 
 	srv := &http.Server{

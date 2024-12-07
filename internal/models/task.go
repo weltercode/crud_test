@@ -6,10 +6,7 @@ type Task struct {
 	Description string `json:"description"`
 	TimeStarted int32  `json:"started"`
 	TimeEnded   int32  `json:"ended"`
-	Tags        TagsList
-}
-type TagsList struct {
-	List []Tag `json:"tags"`
+	Tags        []Tag
 }
 
 type Tag struct {
