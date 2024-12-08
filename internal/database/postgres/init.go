@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+
+	_ "github.com/lib/pq"
 )
 
 type ConnectionConfig struct {
@@ -20,7 +22,6 @@ func NewDbConnect(c ConnectionConfig) *sql.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
 
 	if err := db.Ping(); err != nil {
 		log.Fatal(err)

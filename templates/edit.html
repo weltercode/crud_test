@@ -5,10 +5,11 @@
         <div class="col-6">
             <h1>Edit task</h1>
 
-            <form action="/task/add/{{.Id}}" method="POST" class="row g-2">
+            <form action="{{ .SaveFormUrl}}" method="POST" class="row g-2">
                 <div class="input-group mb-3">
+                    <input type="hidden" name="id" value="{{.taskID}}">
                     <span class="input-group-text" id="basic-addon1">Task:</span>
-                    <input type="text" name="task_name" class="form-control" aria-describedby="basic-addon1" value="{{ .Task_name}}">
+                    <input type="text" name="title" class="form-control" aria-describedby="basic-addon1" value="{{ .Task_name}}">
                     <span class="lead"><input type="submit" value="Save" class="btn btn-lg btn-secondary fw-bold border-white"></span>
                   </div>
             </form>

@@ -3,7 +3,7 @@
 <ul class="list-group">
     {{ range .Tasks }}
     <li class="list-group-item">    
-        <strong> {{ .Title }}</strong> ({{ .Description }}) {{ formatTime .TimeStarted }} - {{ formatTime .TimeEnded }}<br>
+        <strong> {{ .Title }}</strong> ({{ .Description }}) {{ formatT .TimeStarted }} - {{ formatT .TimeEnded }}<br>
         {{ range .Tags }}
             {{ .Name }}
         {{ end }}
