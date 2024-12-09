@@ -5,8 +5,8 @@ services:
     build:
       context: . # Assumes Dockerfile is in the same directory
     container_name: golang_crud_app
-    ports:
-      - "${APP_PORT}:8080" # Use environment variable for app port
+    # ports:
+    #   - "${APP_PORT}:8080" # Use environment variable for app port
     env_file: 
       - .env # Load variables from .env file
     depends_on:

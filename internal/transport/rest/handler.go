@@ -152,15 +152,19 @@ func (h *Handler) TaskSaveHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := r.FormValue("id")
 	title := r.FormValue("title")
+	description := "test"
+	starttime := time.Now()
+	endtime := time.Now()
 
-	fmt.Println(id, title)
+	fmt.Println(id, title, description, starttime, endtime)
 
-	defer h.db.Close()
 	var taskID int
 	if id == "" {
-		err = h.db.QueryRow("INSERT INTO tasks (title) VALUES ($1) RETURNING id", title).Scan(&taskID)
+		err = h.db.QueryRow("INSERT INTO tasks (title, description, starttime, endtime) VALUES ($1, $2, $3, $4) RETURNING id",
+			title, description, starttime, endtime).Scan(&taskID)
 		if err != nil {
-			http.Error(w, "Failed to save task", http.StatusInternalServerError)
+			fmt.Println(err)
+			http.Error(w, "Failed to create task", http.StatusInternalServerError)
 			return
 		}
 	} else {

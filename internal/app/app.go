@@ -2,6 +2,7 @@ package app
 
 import (
 	"crud_test/internal/database/postgres"
+	"crud_test/internal/repositories"
 	"crud_test/internal/transport/rest"
 	"database/sql"
 	"log"
@@ -12,10 +13,11 @@ import (
 )
 
 type App struct {
-	config  *Config
-	router  *mux.Router
-	handler *rest.Handler
-	db      *sql.DB
+	config   *Config
+	router   *mux.Router
+	handler  *rest.Handler
+	db       *sql.DB
+	taskRepo repositories.TaskRepositoryInterface
 }
 type Config struct {
 	DbIp    string `env:"DATABASE_IP"`
@@ -40,12 +42,14 @@ func CreateApp(config *Config) *App {
 	} else {
 		log.Println("Database connected")
 	}
+	taskRepo := repositories.NewTaskRepository(db)
 
 	return &App{
-		config:  config,
-		router:  router,
-		handler: rest.NewHandler(router, db),
-		db:      db,
+		config:   config,
+		router:   router,
+		handler:  rest.NewHandler(router, db),
+		db:       db,
+		taskRepo: taskRepo,
 	}
 }
 func (app *App) Run() {
@@ -65,7 +69,7 @@ func (app *App) Run() {
 		Handler: app.router,
 	}
 
-	log.Println("SERVER STARTED AT", time.Now().Format(time.RFC3339))
+	log.Printf("SERVER STARTED localhost:%s AT %s", app.config.AppPort, time.Now().Format(time.RFC3339))
 
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
@@ -75,5 +79,24 @@ func (app *App) Shutdown() {
 	if app.db != nil {
 		log.Println("Closing database connection...")
 		app.db.Close()
+	}
+}
+
+func (app *App) CreateTables() {
+	defer app.Shutdown()
+	query := `
+    CREATE TABLE "tasks" (
+        "id" SERIAL NOT NULL PRIMARY KEY,
+        "title" VARCHAR(255) NOT NULL,
+        "description" VARCHAR(255) NULL,
+        "starttime" TIMESTAMP NULL,
+        "endtime" TIMESTAMP NULL
+    );`
+
+	_, err := app.db.Exec(query)
+	if err != nil {
+		log.Fatalf("Failed to create tables: %v", err)
+	} else {
+		log.Println("Tables created successfully!")
 	}
 }
