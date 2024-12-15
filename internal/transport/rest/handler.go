@@ -2,7 +2,7 @@ package rest
 
 import (
 	"crud_test/internal/models"
-	"database/sql"
+	"crud_test/internal/repositories"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,15 +17,15 @@ import (
 type Handler struct {
 	router *mux.Router
 	tmpl   *template.Template
-	db     *sql.DB
+	repo   repositories.TaskRepositoryInterface
 }
 
-func NewHandler(router *mux.Router, db *sql.DB) *Handler {
+func NewHandler(router *mux.Router, repo repositories.TaskRepositoryInterface) *Handler {
 	tmpl := template.New("")
 	return &Handler{
 		router: router,
 		tmpl:   tmpl,
-		db:     db,
+		repo:   repo,
 	}
 }
 
@@ -92,42 +92,10 @@ func (h *Handler) TasksListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tasks := []models.Task{
-		{
-			ID:          "1",
-			Title:       "Complete Report",
-			Description: "Finish the monthly financial report and submit it to management.",
-			TimeStarted: time.Date(2024, 12, 07, 14, 45, 0, 0, time.UTC),
-			TimeEnded:   time.Date(2024, 12, 07, 15, 15, 0, 0, time.UTC),
-			Tags: []models.Tag{
-				{Id: 1, Name: "work"},
-				{Id: 2, Name: "report"},
-				{Id: 3, Name: "urgent"},
-			},
-		},
-		{
-			ID:          "2",
-			Title:       "Plan Vacation",
-			Description: "Research and book flights and hotels for the summer vacation.",
-			TimeStarted: time.Date(2024, 12, 07, 15, 15, 0, 0, time.UTC),
-			TimeEnded:   time.Date(2024, 12, 07, 16, 15, 0, 0, time.UTC),
-			Tags: []models.Tag{
-				{Id: 4, Name: "personal"},
-				{Id: 5, Name: "travel"},
-			},
-		},
-		{
-			ID:          "3",
-			Title:       "Fix Database Issue",
-			Description: "Investigate and resolve the database connectivity issue.",
-			TimeStarted: time.Date(2024, 12, 07, 16, 25, 0, 0, time.UTC),
-			TimeEnded:   time.Date(2024, 12, 07, 16, 45, 0, 0, time.UTC),
-			Tags: []models.Tag{
-				{Id: 1, Name: "work"},
-				{Id: 6, Name: "bugfix"},
-				{Id: 7, Name: "database"},
-			},
-		},
+	tasks, err := h.repo.GetAllByCrit("1", "1")
+	if err != nil {
+		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	data := map[string]interface{}{
 		"Title": "Tasks List",
@@ -158,23 +126,26 @@ func (h *Handler) TaskSaveHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(id, title, description, starttime, endtime)
 
-	var taskID int
-	if id == "" {
-		err = h.db.QueryRow("INSERT INTO tasks (title, description, starttime, endtime) VALUES ($1, $2, $3, $4) RETURNING id",
-			title, description, starttime, endtime).Scan(&taskID)
-		if err != nil {
-			fmt.Println(err)
-			http.Error(w, "Failed to create task", http.StatusInternalServerError)
-			return
-		}
-	} else {
-		_, err = h.db.Exec("UPDATE tasks SET title = $1 WHERE id = $2", title, id)
-		if err != nil {
-			http.Error(w, "Failed to update task", http.StatusInternalServerError)
-			return
-		}
-		taskID, _ = strconv.Atoi(id)
+	task := models.Task{
+		ID:          id,
+		Title:       title,
+		Description: description,
+		TimeStarted: starttime,
+		TimeEnded:   endtime,
 	}
+	var opname = ""
+	if id == "" {
+		_, err = h.repo.Create(&task)
+		opname = "create"
+	} else {
+		err = h.repo.Update(&task)
+		opname = "update"
+	}
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to %s task", opname), http.StatusInternalServerError)
+		return
+	}
+	//_, _ = strconv.Atoi(id)
 
 	// Redirect to the task detail page
 	redirectURL := h.getHrefByRouteName("tasks_list").String()

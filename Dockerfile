@@ -1,31 +1,28 @@
-# Build stage
 FROM golang:1.22.3-alpine as builder
 
 WORKDIR /app
 
-# Copy module files
 COPY go.mod go.sum ./
 
-# Install dependencies
 RUN go mod tidy && go mod download
 
-# Copy application files
 COPY . .
 
-# Set the working directory for the build process
-WORKDIR /app/internal/cmd
+WORKDIR /app/cmd/init
+RUN go build -o initDb .
 
-# Build the application
+WORKDIR /app/cmd/server
 RUN go build -o main .
 
-# Run stage
 FROM alpine:latest
 
 WORKDIR /root/
 
-# Copy the compiled binary
-COPY --from=builder /app/internal/cmd/main .
+COPY --from=builder /app/cmd/init/initDb .
+COPY --from=builder /app/cmd/server/main .
+COPY .env.production ./
+COPY templates ./templates
 
 EXPOSE 8080
 
-CMD ["./main"]
+CMD ["sh", "-c", "./initDb && ./main"]

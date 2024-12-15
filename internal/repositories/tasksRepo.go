@@ -14,10 +14,33 @@ func NewTaskRepository(db *sql.DB) TaskRepositoryInterface {
 	return &TaskRepository{db: db}
 }
 
+func (repo *TaskRepository) GetAllByCrit(field string, value string) ([]models.Task, error) {
+
+	rows, err := repo.db.Query("SELECT id, title, description, starttime, endtime FROM tasks WHERE $1=$2 ORDER BY endtime DESC, starttime DESC", field, value)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tasks []models.Task
+
+	for rows.Next() {
+		var t models.Task
+		if err := rows.Scan(&t.ID, &t.Title, &t.Description, &t.TimeStarted, &t.TimeEnded); err != nil {
+			return tasks, err
+		}
+		tasks = append(tasks, t)
+	}
+	if err = rows.Err(); err != nil {
+		return tasks, err
+	}
+	return tasks, nil
+}
+
 func (repo *TaskRepository) GetByID(id int) (*models.Task, error) {
 	t := &models.Task{} // Use a pointer to Task
 	err := repo.db.QueryRow(
-		"SELECT id, title, description, start, end FROM tasks WHERE id=$1",
+		"SELECT id, title, description, starttime, endtime FROM tasks WHERE id=$1",
 		id,
 	).Scan(&t.ID, &t.Title, &t.Description, &t.TimeStarted, &t.TimeEnded)
 	if err != nil {

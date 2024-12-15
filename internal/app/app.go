@@ -47,7 +47,7 @@ func CreateApp(config *Config) *App {
 	return &App{
 		config:   config,
 		router:   router,
-		handler:  rest.NewHandler(router, db),
+		handler:  rest.NewHandler(router, taskRepo),
 		db:       db,
 		taskRepo: taskRepo,
 	}
@@ -85,7 +85,7 @@ func (app *App) Shutdown() {
 func (app *App) CreateTables() {
 	defer app.Shutdown()
 	query := `
-    CREATE TABLE "tasks" (
+    CREATE TABLE IF NOT EXISTS"tasks" (
         "id" SERIAL NOT NULL PRIMARY KEY,
         "title" VARCHAR(255) NOT NULL,
         "description" VARCHAR(255) NULL,
