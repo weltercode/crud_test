@@ -120,7 +120,7 @@ func (h *Handler) TaskSaveHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := r.FormValue("id")
 	title := r.FormValue("title")
-	description := "test"
+	description := r.FormValue("description")
 	starttime := time.Now()
 	endtime := time.Now()
 
@@ -134,7 +134,7 @@ func (h *Handler) TaskSaveHandler(w http.ResponseWriter, r *http.Request) {
 		TimeEnded:   endtime,
 	}
 	var opname = ""
-	if id == "" {
+	if id == "0" {
 		_, err = h.repo.Create(&task)
 		opname = "create"
 	} else {
@@ -156,11 +156,11 @@ func (h *Handler) TaskSaveHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) TaskViewHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	vars := mux.Vars(r)
-	taskID := "" // Default value
+	taskID := 0
 
 	if idStr, exists := vars["id"]; exists {
 		if id, err := strconv.Atoi(idStr); err == nil && id > 0 {
-			taskID = idStr
+			taskID = id
 		}
 	}
 
@@ -169,13 +169,28 @@ func (h *Handler) TaskViewHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	//fmt.Println(h.getHrefByRouteName("task_save").String())
+
+	var task *models.Task
+	if taskID > 0 {
+		task, err = h.repo.GetByID(taskID)
+		if err != nil {
+			log.Fatal(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+
 	data := map[string]interface{}{
-		"Title":   "Task edit form",
-		"TaskID":  taskID,
-		"Message": "Here are the details of your task.",
-		//"SaveFormUrl": h.getHrefByRouteName("task_save").String(),
-		"SaveFormUrl": "/task/save",
+		"Title":            "Task edit form",
+		"TaskID":           0,
+		"Task_name":        "",
+		"Task_description": "",
+		"SaveFormUrl":      "/task/save",
+	}
+
+	if task != nil {
+		data["TaskID"] = task.ID
+		data["Task_name"] = task.Title
+		data["Task_description"] = task.Description
 	}
 	h.BaseHandler(w, r, data)
 }
