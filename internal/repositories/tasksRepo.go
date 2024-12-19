@@ -38,7 +38,7 @@ func (repo *TaskRepository) GetAllByCrit(field string, value string) ([]models.T
 }
 
 func (repo *TaskRepository) GetByID(id int) (*models.Task, error) {
-	t := &models.Task{} // Use a pointer to Task
+	t := &models.Task{}
 	err := repo.db.QueryRow(
 		"SELECT id, title, description, starttime, endtime FROM tasks WHERE id=$1",
 		id,

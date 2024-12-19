@@ -200,6 +200,15 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	h.BaseHandler(w, r, data)
 }
 
+func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+}
+
+func (h *Handler) StartTask(w http.ResponseWriter, r *http.Request) {
+}
+
+func (h *Handler) EndTask(w http.ResponseWriter, r *http.Request) {
+}
+
 // Helper function to get URLs for routes
 func (h *Handler) getHrefByRouteName(routeName string) *url.URL {
 	href, err := h.router.Get(routeName).URL()

@@ -62,6 +62,9 @@ func (app *App) Run() {
 	app.router.HandleFunc("/task/new", app.handler.TaskViewHandler).Methods("GET").Name("task_new")
 	app.router.HandleFunc("/task/save", app.handler.TaskSaveHandler).Methods("POST").Name("task_save")
 	app.router.HandleFunc("/task/login", app.handler.LoginHandler).Methods("GET").Name("login")
+	app.router.HandleFunc("/task/delete/{id:[0-9]+}", app.handler.DeleteTaskHandler).Methods("GET").Name("task_delete")
+	app.router.HandleFunc("/task/start/{id:[0-9]+}", app.handler.StartTask).Methods("GET").Name("task_start")
+	app.router.HandleFunc("/task/end/{id:[0-9]+}", app.handler.EndTask).Methods("GET").Name("task_end")
 	http.Handle("/", app.router)
 
 	srv := &http.Server{
