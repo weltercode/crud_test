@@ -98,8 +98,9 @@ func (h *Handler) TasksListHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	data := map[string]interface{}{
-		"Title": "Tasks List",
-		"Tasks": tasks,
+		"Title":       "Tasks List",
+		"Tasks":       tasks,
+		"newTaskHref": h.getHrefByRouteName("task_new").String(),
 	}
 
 	h.BaseHandler(w, r, data)
@@ -201,6 +202,21 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	taskID := 0
+
+	if idStr, exists := vars["id"]; exists {
+		if id, err := strconv.Atoi(idStr); err == nil && id > 0 {
+			taskID = id
+		}
+	}
+	err := h.repo.Delete(taskID)
+	if err != nil {
+		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	redirectURL := h.getHrefByRouteName("tasks_list").String()
+	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
 
 func (h *Handler) StartTask(w http.ResponseWriter, r *http.Request) {

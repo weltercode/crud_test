@@ -7,4 +7,5 @@ type TaskRepositoryInterface interface {
 	GetAllByCrit(field string, value string) ([]models.Task, error)
 	Create(task *models.Task) (int, error)
 	Update(task *models.Task) error
+	Delete(id int) error
 }

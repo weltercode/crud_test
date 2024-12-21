@@ -69,3 +69,12 @@ func (repo *TaskRepository) Update(t *models.Task) error {
 	}
 	return nil
 }
+
+func (repo *TaskRepository) Delete(id int) error {
+	_, err := repo.db.Exec("DELETE FROM tasks WHERE id = $1", id)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
