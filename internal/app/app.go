@@ -5,12 +5,16 @@ import (
 	"crud_test/internal/logger"
 	"crud_test/internal/repositories"
 	"crud_test/internal/transport/rest"
+	"fmt"
 
 	"database/sql"
 	"net/http"
 	"time"
 
+	_ "crud_test/docs" // which is the generated folder after swag init
+
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type App struct {
@@ -40,6 +44,7 @@ func CreateApp(config *Config) *App {
 		User:   config.DbUser,
 		Pass:   config.DbPass,
 	}, logger)
+
 	if err := db.Ping(); err != nil {
 		logger.Error("Fail to connect DB", err)
 	} else {
@@ -69,6 +74,12 @@ func (app *App) Run() {
 	app.router.HandleFunc("/task/delete/{id:[0-9]+}", app.handler.DeleteTaskHandler).Methods("GET").Name("task_delete")
 	app.router.HandleFunc("/task/start/{id:[0-9]+}", app.handler.StartTask).Methods("GET").Name("task_start")
 	app.router.HandleFunc("/task/end/{id:[0-9]+}", app.handler.EndTask).Methods("GET").Name("task_end")
+	app.router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
+
+	app.router.PathPrefix("/docs/").Handler(httpSwagger.WrapHandler)
+
 	http.Handle("/", app.router)
 
 	srv := &http.Server{
@@ -76,11 +87,12 @@ func (app *App) Run() {
 		Handler: app.router,
 	}
 
-	app.logger.Info("SERVER STARTED localhost:%s AT %s", app.config.AppPort, time.Now().Format(time.RFC3339))
+	app.logger.Info(fmt.Sprintf("SERVER STARTED localhost:%s AT %s", app.config.AppPort, time.Now().Format(time.RFC3339)))
 
 	if err := srv.ListenAndServe(); err != nil {
 		app.logger.Error("Server fail to start", err)
 	}
+
 }
 func (app *App) Shutdown() {
 	if app.db != nil {

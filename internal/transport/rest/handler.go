@@ -72,7 +72,15 @@ func formatTime(t time.Time) string {
 		t.Hour(), t.Minute(), t.Second())
 }
 
-// TasksListHandler handles the "/tasks" route
+// @Summary Show the task list
+// @Description
+// @Tags Task
+// @Accept json
+// @Produce json
+// @Param id path int true "Task ID"
+// @Success 200 {object} models.Task
+// @Failure 400 {object} map[string]string
+// @Router /tasks/{id} [get]
 func (h *Handler) TasksListHandler(w http.ResponseWriter, r *http.Request) {
 
 	var err error
@@ -99,13 +107,14 @@ func (h *Handler) TasksListHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	data := map[string]interface{}{
-		"Title":       "Tasks List",
+		"Title":       "Your task list",
 		"Tasks":       tasks,
 		"newTaskHref": h.getHrefByRouteName("task_new").String(),
 	}
 
 	h.BaseHandler(w, r, data)
 }
+
 func (h *Handler) TaskSaveHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	h.tmpl, err = template.ParseFiles("templates/base.html", "templates/header.html", "templates/footer.html", "templates/edit.html")

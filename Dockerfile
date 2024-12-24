@@ -22,6 +22,7 @@ COPY --from=builder /app/cmd/init/initDb .
 COPY --from=builder /app/cmd/server/main .
 COPY .env.production ./
 COPY templates ./templates
+COPY docs ./docs
 
 EXPOSE 8080
 
