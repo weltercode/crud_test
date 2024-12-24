@@ -1,10 +1,10 @@
 package rest
 
 import (
+	"crud_test/internal/logger"
 	"crud_test/internal/models"
 	"crud_test/internal/repositories"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -18,14 +18,15 @@ type Handler struct {
 	router *mux.Router
 	tmpl   *template.Template
 	repo   repositories.TaskRepositoryInterface
+	logger logger.LoggerInterface
 }
 
-func NewHandler(router *mux.Router, repo repositories.TaskRepositoryInterface) *Handler {
-	tmpl := template.New("")
+func NewHandler(router *mux.Router, repo repositories.TaskRepositoryInterface, logger logger.LoggerInterface) *Handler {
 	return &Handler{
 		router: router,
-		tmpl:   tmpl,
+		tmpl:   template.New(""),
 		repo:   repo,
+		logger: logger,
 	}
 }
 
@@ -39,7 +40,7 @@ func (h *Handler) BaseHandler(w http.ResponseWriter, r *http.Request, data map[s
 	data["Sign_page_url"] = h.getHrefByRouteName("login").String()
 
 	if err := h.tmpl.Execute(w, data); err != nil {
-		log.Fatal(err)
+		h.logger.Error("Template execution error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -49,7 +50,7 @@ func (h *Handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	h.tmpl, err = template.ParseFiles("templates/base.html", "templates/header.html", "templates/footer.html", "templates/home.html")
 	if err != nil {
-		log.Fatal(err)
+		h.logger.Error("Template execution error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -87,14 +88,14 @@ func (h *Handler) TasksListHandler(w http.ResponseWriter, r *http.Request) {
 		"templates/tasks_list.html",
 	)
 	if err != nil {
-		log.Fatal(err)
+		h.logger.Error("Template execution error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	tasks, err := h.repo.GetAllByCrit("1", "1")
 	if err != nil {
-		log.Fatal(err)
+		h.logger.Error("GetAllByCrit error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	data := map[string]interface{}{
@@ -109,7 +110,7 @@ func (h *Handler) TaskSaveHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	h.tmpl, err = template.ParseFiles("templates/base.html", "templates/header.html", "templates/footer.html", "templates/edit.html")
 	if err != nil {
-		log.Fatal(err)
+		h.logger.Error("Template execution error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -167,7 +168,7 @@ func (h *Handler) TaskViewHandler(w http.ResponseWriter, r *http.Request) {
 
 	h.tmpl, err = template.ParseFiles("templates/base.html", "templates/header.html", "templates/footer.html", "templates/edit.html")
 	if err != nil {
-		log.Fatal(err)
+		h.logger.Error("Template execution error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -175,7 +176,7 @@ func (h *Handler) TaskViewHandler(w http.ResponseWriter, r *http.Request) {
 	if taskID > 0 {
 		task, err = h.repo.GetByID(taskID)
 		if err != nil {
-			log.Fatal(err)
+			h.logger.Error("GetByID error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -212,7 +213,7 @@ func (h *Handler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err := h.repo.Delete(taskID)
 	if err != nil {
-		log.Fatal(err)
+		h.logger.Error("Fail to delete task", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	redirectURL := h.getHrefByRouteName("tasks_list").String()
@@ -229,7 +230,7 @@ func (h *Handler) EndTask(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) getHrefByRouteName(routeName string) *url.URL {
 	href, err := h.router.Get(routeName).URL()
 	if err != nil {
-		log.Fatalf("Cannot create route: %v", routeName)
+		h.logger.Error(fmt.Sprintf("Cannot create route: %v", routeName), err)
 	}
 	return href
 }

@@ -1,17 +1,18 @@
 package repositories
 
 import (
+	"crud_test/internal/logger"
 	"crud_test/internal/models"
 	"database/sql"
-	"fmt"
 )
 
 type TaskRepository struct {
-	db *sql.DB
+	db     *sql.DB
+	logger logger.LoggerInterface
 }
 
-func NewTaskRepository(db *sql.DB) TaskRepositoryInterface {
-	return &TaskRepository{db: db}
+func NewTaskRepository(db *sql.DB, logger logger.LoggerInterface) TaskRepositoryInterface {
+	return &TaskRepository{db: db, logger: logger}
 }
 
 func (repo *TaskRepository) GetAllByCrit(field string, value string) ([]models.Task, error) {
@@ -44,7 +45,6 @@ func (repo *TaskRepository) GetByID(id int) (*models.Task, error) {
 		id,
 	).Scan(&t.ID, &t.Title, &t.Description, &t.TimeStarted, &t.TimeEnded)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	return t, nil
@@ -55,7 +55,6 @@ func (repo *TaskRepository) Create(t *models.Task) (int, error) {
 	err := repo.db.QueryRow("INSERT INTO tasks (title, description, starttime, endtime) VALUES ($1, $2, $3, $4) RETURNING id",
 		t.Title, t.Description, t.TimeStarted, t.TimeEnded).Scan(&taskID)
 	if err != nil {
-		fmt.Println(err)
 		return 0, err
 	}
 	return taskID, nil
@@ -64,7 +63,6 @@ func (repo *TaskRepository) Create(t *models.Task) (int, error) {
 func (repo *TaskRepository) Update(t *models.Task) error {
 	_, err := repo.db.Exec("UPDATE tasks SET title = $1, description =$2, starttime=$3, endtime=$4 WHERE id = $5", t.Title, t.Description, t.TimeStarted, t.TimeEnded, t.ID)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	return nil
@@ -73,7 +71,6 @@ func (repo *TaskRepository) Update(t *models.Task) error {
 func (repo *TaskRepository) Delete(id int) error {
 	_, err := repo.db.Exec("DELETE FROM tasks WHERE id = $1", id)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	return nil
