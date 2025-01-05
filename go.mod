@@ -8,4 +8,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 )
 
-require github.com/lib/pq v1.10.9 // indirect
+require (
+	github.com/lib/pq v1.10.9 // indirect
+	github.com/weltercode/cache v0.0.0-20241110125451-d6ead75ad850 // indirect
+)

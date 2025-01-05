@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/weltercode/cache"
 )
 
 type App struct {
@@ -42,7 +43,8 @@ func CreateApp(config *Config) *App {
 	} else {
 		log.Println("Database connected")
 	}
-	taskRepo := repositories.NewTaskRepository(db)
+	cache := cache.New()
+	taskRepo := repositories.NewTaskRepository(db, cache)
 
 	return &App{
 		config:   config,
