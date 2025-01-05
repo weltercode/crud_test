@@ -2,15 +2,23 @@ package app
 
 import (
 	"crud_test/internal/database/postgres"
+	"crud_test/internal/logger"
 	"crud_test/internal/repositories"
 	"crud_test/internal/transport/rest"
+	"fmt"
+
 	"database/sql"
-	"log"
 	"net/http"
 	"time"
 
+	_ "crud_test/docs" // which is the generated folder after swag init
+
 	"github.com/gorilla/mux"
+<<<<<<< HEAD
 	"github.com/weltercode/cache"
+=======
+	httpSwagger "github.com/swaggo/http-swagger"
+>>>>>>> bb6d08dd92ba2cc6c015be1dbdbb006ab09637aa
 )
 
 type App struct {
@@ -19,6 +27,7 @@ type App struct {
 	handler  *rest.Handler
 	db       *sql.DB
 	taskRepo repositories.TaskRepositoryInterface
+	logger   logger.LoggerInterface
 }
 type Config struct {
 	DbIp    string `env:"DATABASE_IP"`
@@ -26,37 +35,44 @@ type Config struct {
 	DbName  string `env:"DATABASE_NAME"`
 	DbUser  string `env:"DATABASE_USER"`
 	DbPass  string `env:"DATABASE_PASS"`
-	AppPort string `env:"APP_PORT" envDefault:8080`
+	AppPort string `env:"APP_PORT"`
 }
 
 func CreateApp(config *Config) *App {
 	router := mux.NewRouter()
+	logger := logger.NewSlogLogger()
 	db := postgres.NewDbConnect(postgres.ConnectionConfig{
 		Host:   config.DbIp,
 		Port:   config.DbPort,
 		DbName: config.DbName,
 		User:   config.DbUser,
 		Pass:   config.DbPass,
-	})
+	}, logger)
+
 	if err := db.Ping(); err != nil {
-		log.Fatal(err)
+		logger.Error("Fail to connect DB", err)
 	} else {
-		log.Println("Database connected")
+		logger.Info("Database connected", err)
 	}
+<<<<<<< HEAD
 	cache := cache.New()
 	taskRepo := repositories.NewTaskRepository(db, cache)
+=======
+	taskRepo := repositories.NewTaskRepository(db, logger)
+>>>>>>> bb6d08dd92ba2cc6c015be1dbdbb006ab09637aa
 
 	return &App{
 		config:   config,
 		router:   router,
-		handler:  rest.NewHandler(router, taskRepo),
+		handler:  rest.NewHandler(router, taskRepo, logger),
 		db:       db,
 		taskRepo: taskRepo,
+		logger:   logger,
 	}
 }
 func (app *App) Run() {
 	defer app.Shutdown()
-	log.Println("App Running")
+	app.logger.Info("App Running")
 
 	app.router.HandleFunc("/", app.handler.HomeHandler).Name("home")
 	app.router.HandleFunc("/tasks", app.handler.TasksListHandler).Methods("GET").Name("tasks_list")
@@ -67,6 +83,12 @@ func (app *App) Run() {
 	app.router.HandleFunc("/task/delete/{id:[0-9]+}", app.handler.DeleteTaskHandler).Methods("GET").Name("task_delete")
 	app.router.HandleFunc("/task/start/{id:[0-9]+}", app.handler.StartTask).Methods("GET").Name("task_start")
 	app.router.HandleFunc("/task/end/{id:[0-9]+}", app.handler.EndTask).Methods("GET").Name("task_end")
+	app.router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
+
+	app.router.PathPrefix("/docs/").Handler(httpSwagger.WrapHandler)
+
 	http.Handle("/", app.router)
 
 	srv := &http.Server{
@@ -74,15 +96,16 @@ func (app *App) Run() {
 		Handler: app.router,
 	}
 
-	log.Printf("SERVER STARTED localhost:%s AT %s", app.config.AppPort, time.Now().Format(time.RFC3339))
+	app.logger.Info(fmt.Sprintf("SERVER STARTED localhost:%s AT %s", app.config.AppPort, time.Now().Format(time.RFC3339)))
 
 	if err := srv.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		app.logger.Error("Server fail to start", err)
 	}
+
 }
 func (app *App) Shutdown() {
 	if app.db != nil {
-		log.Println("Closing database connection...")
+		app.logger.Info("Closing database connection...")
 		app.db.Close()
 	}
 }
@@ -100,8 +123,8 @@ func (app *App) CreateTables() {
 
 	_, err := app.db.Exec(query)
 	if err != nil {
-		log.Fatalf("Failed to create tables: %v", err)
+		app.logger.Error("Failed to create tables", err)
 	} else {
-		log.Println("Tables created successfully!")
+		app.logger.Info("Tables created successfully!")
 	}
 }

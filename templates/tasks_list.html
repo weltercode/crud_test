@@ -1,13 +1,17 @@
 {{ define "content" }}
-<h1>{{ .Title }}</h1>
+<h3>{{ .Title }}</h3>
+<p class="lead">
+    <a href="{{ .newTaskHref }}" class="btn btn-lg btn-secondary fw-bold border-white">New</a>
+</p>
 <ul class="list-group">
     {{ range .Tasks }}
     <li class="list-group-item">    
-        <strong> {{ .Title }}</strong> ({{ .Description }}) {{ formatT .TimeStarted }} - {{ formatT .TimeEnded }}<br>
+        <strong> {{ .Title }}</strong> ({{ .Description }}) {{ formatT .TimeStarted }} - {{ formatT .TimeEnded }}
+        <a href="task/{{ .ID }}" class="btn btn-secondary fw-bold border-white">edit</a>
+        <a href="task/delete/{{ .ID }}" class="btn btn-secondary fw-bold border-white">delete</a>
         {{ range .Tags }}
             {{ .Name }}
-        {{ end }}
-        <a href="task/{{ .ID }}" class="btn btn-secondary fw-bold border-white">edit</a>
+        {{ end }}        
     </li>
     {{ end }}
 </ul>

@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"crud_test/internal/logger"
 	"crud_test/internal/models"
 	"database/sql"
 	"fmt"
@@ -81,6 +82,16 @@ func (repo *TaskRepository) Update(t *models.Task) error {
 	_, err := repo.db.Exec("UPDATE tasks SET title = $1, description =$2, starttime=$3, endtime=$4 WHERE id = $5", t.Title, t.Description, t.TimeStarted, t.TimeEnded, t.ID)
 	if err != nil {
 		fmt.Println(err)
+		return err
+	}
+	skey := "task_" + t.ID
+	repo.cache.Set(skey, t)
+	return nil
+}
+
+func (repo *TaskRepository) Delete(id int) error {
+	_, err := repo.db.Exec("DELETE FROM tasks WHERE id = $1", id)
+	if err != nil {
 		return err
 	}
 	skey := "task_" + t.ID
