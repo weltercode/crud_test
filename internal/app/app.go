@@ -14,11 +14,10 @@ import (
 	_ "crud_test/docs" // which is the generated folder after swag init
 
 	"github.com/gorilla/mux"
-<<<<<<< HEAD
+
 	"github.com/weltercode/cache"
-=======
+
 	httpSwagger "github.com/swaggo/http-swagger"
->>>>>>> bb6d08dd92ba2cc6c015be1dbdbb006ab09637aa
 )
 
 type App struct {
@@ -54,12 +53,8 @@ func CreateApp(config *Config) *App {
 	} else {
 		logger.Info("Database connected", err)
 	}
-<<<<<<< HEAD
 	cache := cache.New()
-	taskRepo := repositories.NewTaskRepository(db, cache)
-=======
-	taskRepo := repositories.NewTaskRepository(db, logger)
->>>>>>> bb6d08dd92ba2cc6c015be1dbdbb006ab09637aa
+	taskRepo := repositories.NewTaskRepository(db, cache, logger)
 
 	return &App{
 		config:   config,
@@ -70,6 +65,7 @@ func CreateApp(config *Config) *App {
 		logger:   logger,
 	}
 }
+
 func (app *App) Run() {
 	defer app.Shutdown()
 	app.logger.Info("App Running")

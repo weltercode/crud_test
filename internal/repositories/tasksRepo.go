@@ -11,10 +11,11 @@ import (
 type TaskRepository struct {
 	db    *sql.DB
 	cache TaskCacheInterface
+	log   logger.LoggerInterface
 }
 
-func NewTaskRepository(db *sql.DB, cache TaskCacheInterface) TaskRepositoryInterface {
-	return &TaskRepository{db: db, cache: cache}
+func NewTaskRepository(db *sql.DB, cache TaskCacheInterface, log logger.LoggerInterface) TaskRepositoryInterface {
+	return &TaskRepository{db: db, cache: cache, log: log}
 }
 
 func (repo *TaskRepository) GetAllByCrit(field string, value string) ([]models.Task, error) {
@@ -44,7 +45,7 @@ func (repo *TaskRepository) GetByID(id int) (*models.Task, error) {
 	t := &models.Task{}
 	skey := "task_" + strconv.Itoa(id)
 	value, err := repo.cache.Get(skey)
-	if err != nil || t.ID == "" {
+	if err != nil {
 		err := repo.db.QueryRow(
 			"SELECT id, title, description, starttime, endtime FROM tasks WHERE id=$1",
 			id,
@@ -57,9 +58,9 @@ func (repo *TaskRepository) GetByID(id int) (*models.Task, error) {
 	} else {
 		if task, ok := value.(*models.Task); ok {
 			t = task
-			fmt.Println("Loaded from cache ID:" + t.ID)
+			repo.log.Info("Loaded from cache ID:" + t.ID)
 		} else {
-			fmt.Println("Type assertion to *models.Task failed")
+			repo.log.Error("Type assertion to *models.Task failed")
 		}
 	}
 	return t, nil
@@ -94,7 +95,7 @@ func (repo *TaskRepository) Delete(id int) error {
 	if err != nil {
 		return err
 	}
-	skey := "task_" + t.ID
-	repo.cache.Set(skey, t)
+
+	repo.cache.Delete("task_" + strconv.Itoa(id))
 	return nil
 }
